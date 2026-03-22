@@ -1,0 +1,84 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subscription Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo-section">
+        <div class="logo-icon">📊</div>
+        <span>SubTracker</span>
+      </div>
+
+      <div class="login-section">
+        <div class="login-text">
+          Sign in to sync<br />
+          across devices
+        </div>
+        <div class="login-button">👤</div>
+      </div>
+    </header>
+
+    <main class="dashboard">
+      <section class="left-column">
+        <div class="panel">
+          <div class="panel-title">
+            <span class="panel-icon">⭐</span>
+            <h2>Popular Subscriptions</h2>
+          </div>
+
+          <div class="search-bar">
+            <input type="text" id="search" placeholder="Search services..." />
+          </div>
+
+          <div id="subscriptions" class="subscriptions-grid"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">
+            <span class="panel-icon">💳</span>
+            <h2>Your Saved Subscriptions</h2>
+          </div>
+
+          <div id="saved-subscriptions" class="saved-subscriptions-list"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">
+            <span class="panel-icon">📋</span>
+            <h2>Other Plans</h2>
+          </div>
+
+          <table id="plans-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Price</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <aside class="right-column">
+        <div class="panel">
+          <div class="panel-title">
+            <span class="panel-icon">📰</span>
+            <h2>Recent Updates</h2>
+          </div>
+
+          <div id="news-container" class="news-list"></div>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

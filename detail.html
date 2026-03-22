@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subscription Detail</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo-section">
+        <div class="logo-icon">📊</div>
+        <span>SubTracker</span>
+      </div>
+    </div>
+
+    <main class="main-content">
+      <section class="content-section">
+        <h1>Subscription Detail</h1>
+
+        <div id="detail" class="detail-card"></div>
+
+        <div class="chart-card">
+          <h2>Price History</h2>
+          <canvas id="priceChart" height="100"></canvas>
+        </div>
+
+        <div class="back-link-wrapper">
+          <a href="index.html" class="back-link">← Back to Subscriptions</a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="detail.js"></script>
+</body>
+</html>
