@@ -1,8 +1,11 @@
 ﻿const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
+let priceChartInstance = null;
 
 async function loadDetail() {
   const container = document.getElementById("detail");
+
+  if (!container) return;
 
   if (!id) {
     container.innerHTML = "<p>No subscription ID provided.</p>";
@@ -22,19 +25,19 @@ async function loadDetail() {
       <div class="detail-content">
         <div class="subscription-icon large-icon">${iconText}</div>
         <h2>${sub.name}</h2>
-        <p>${sub.description}</p>
+        <p>${sub.description || "No description available."}</p>
         <p class="price"><strong>$${parseFloat(sub.price).toFixed(2)}</strong> / month</p>
       </div>
     `;
 
-    loadPriceChart();
+    loadPriceChart(sub.name);
   } catch (err) {
     console.error("Error loading detail:", err);
     container.innerHTML = "<p>Error loading subscription detail.</p>";
   }
 }
 
-async function loadPriceChart() {
+async function loadPriceChart(serviceName = "Subscription") {
   try {
     const res = await fetch(`/api/subscriptions/${id}/prices`);
     if (!res.ok) {
@@ -54,13 +57,17 @@ async function loadPriceChart() {
 
     const ctx = canvas.getContext("2d");
 
-    new Chart(ctx, {
+    if (priceChartInstance) {
+      priceChartInstance.destroy();
+    }
+
+    priceChartInstance = new Chart(ctx, {
       type: "line",
       data: {
-        labels: labels,
+        labels,
         datasets: [
           {
-            label: "Price Over Time",
+            label: `${serviceName} Price History`,
             data: prices,
             borderWidth: 2,
             tension: 0.3,
@@ -73,11 +80,23 @@ async function loadPriceChart() {
         plugins: {
           legend: {
             display: true
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                return `$${parseFloat(context.raw).toFixed(2)}`;
+              }
+            }
           }
         },
         scales: {
           y: {
-            beginAtZero: false
+            beginAtZero: false,
+            ticks: {
+              callback: function(value) {
+                return `$${value}`;
+              }
+            }
           }
         }
       }

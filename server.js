@@ -15,7 +15,7 @@ app.use(express.static(__dirname));
 const db = mysql.createConnection({
   host: "db.it.pointpark.edu",
   user: "subscriptionprices",
-  password: "zgZRxOybiaepQIwL",
+  password: "Enter Password Here",
   database: "subscriptionprices",
   port: 3306
 });
@@ -169,10 +169,7 @@ app.get("/api/saved-subscriptions", (req, res) => {
 });
 
 // =========================
-// Price History for Chart
-// Temporary mock history based on current cost
-// since this professor schema does not show a
-// dedicated price history table
+// Mock Price History for Detail Page
 // =========================
 app.get("/api/subscriptions/:id/prices", (req, res) => {
   const { id } = req.params;
@@ -205,6 +202,135 @@ app.get("/api/subscriptions/:id/prices", (req, res) => {
     ];
 
     res.json(history);
+  });
+});
+
+// =========================
+// Analytics Summary
+// =========================
+app.get("/api/analytics/summary", (req, res) => {
+  const sql = `
+    SELECT
+      id,
+      name,
+      category,
+      cost,
+      renewal_date,
+      status
+    FROM subscriptions
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching analytics summary:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    if (!results.length) {
+      return res.json({
+        totalMonthlyCost: 0,
+        averageMonthlyCost: 0,
+        highestSubscription: null,
+        activeCount: 0
+      });
+    }
+
+    const totalMonthlyCost = results.reduce((sum, sub) => sum + parseFloat(sub.cost || 0), 0);
+    const averageMonthlyCost = totalMonthlyCost / results.length;
+
+    const highestSubscription = results.reduce((max, sub) => {
+      return parseFloat(sub.cost || 0) > parseFloat(max.cost || 0) ? sub : max;
+    }, results[0]);
+
+    const activeCount = results.filter(sub => {
+      const status = (sub.status || "").toLowerCase();
+      return status === "active" || status === "";
+    }).length;
+
+    res.json({
+      totalMonthlyCost: Number(totalMonthlyCost.toFixed(2)),
+      averageMonthlyCost: Number(averageMonthlyCost.toFixed(2)),
+      highestSubscription: {
+        name: highestSubscription.name,
+        cost: Number(parseFloat(highestSubscription.cost || 0).toFixed(2))
+      },
+      activeCount
+    });
+  });
+});
+
+// =========================
+// Analytics Category Breakdown
+// =========================
+app.get("/api/analytics/category-breakdown", (req, res) => {
+  const sql = `
+    SELECT
+      COALESCE(category, 'Uncategorized') AS category,
+      ROUND(SUM(cost), 2) AS total_cost,
+      COUNT(*) AS subscription_count
+    FROM subscriptions
+    GROUP BY category
+    ORDER BY total_cost DESC
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching category breakdown:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    res.json(results);
+  });
+});
+
+// =========================
+// Analytics Top Expensive
+// =========================
+app.get("/api/analytics/top-expensive", (req, res) => {
+  const sql = `
+    SELECT
+      name,
+      category,
+      cost,
+      renewal_date
+    FROM subscriptions
+    ORDER BY cost DESC
+    LIMIT 5
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching top expensive subscriptions:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    res.json(results);
+  });
+});
+
+// =========================
+// Analytics Upcoming Renewals
+// =========================
+app.get("/api/analytics/upcoming-renewals", (req, res) => {
+  const sql = `
+    SELECT
+      name,
+      category,
+      cost,
+      renewal_date
+    FROM subscriptions
+    WHERE renewal_date IS NOT NULL
+    ORDER BY renewal_date ASC
+    LIMIT 5
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching upcoming renewals:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    res.json(results);
   });
 });
 
