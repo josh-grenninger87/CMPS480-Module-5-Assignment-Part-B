@@ -201,18 +201,43 @@ async function loadAnalyticsSummary() {
 
     const data = await res.json();
 
-    document.getElementById("total-monthly-cost").textContent = `$${data.totalMonthlyCost.toFixed(2)}`;
-    document.getElementById("average-monthly-cost").textContent = `$${data.averageMonthlyCost.toFixed(2)}`;
+    document.getElementById("total-monthly-cost").textContent =
+      `$${data.totalMonthlyCost.toFixed(2)}`;
+    document.getElementById("average-monthly-cost").textContent =
+      `$${data.averageMonthlyCost.toFixed(2)}`;
     document.getElementById("active-count").textContent = data.activeCount;
 
     const highestEl = document.getElementById("highest-subscription");
     if (data.highestSubscription) {
-      highestEl.textContent = `${data.highestSubscription.name} ($${data.highestSubscription.cost.toFixed(2)})`;
+      highestEl.textContent =
+        `${data.highestSubscription.name} ($${data.highestSubscription.cost.toFixed(2)})`;
     } else {
       highestEl.textContent = "N/A";
     }
   } catch (err) {
     console.error("Error loading analytics summary:", err);
+  }
+}
+
+// =========================
+// Analytics Yearly Cost
+// Added from interview feedback
+// =========================
+async function loadYearlyCost() {
+  try {
+    const res = await fetch("/api/analytics/yearly-cost");
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch yearly cost");
+    }
+
+    const data = await res.json();
+    const yearlyCostEl = document.getElementById("yearly-cost");
+    if (!yearlyCostEl) return;
+
+    yearlyCostEl.textContent = `$${parseFloat(data.yearly_total || 0).toFixed(2)}`;
+  } catch (err) {
+    console.error("Error loading yearly cost:", err);
   }
 }
 
@@ -348,6 +373,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadNews();
   loadOtherPlans();
   loadAnalyticsSummary();
+  loadYearlyCost();
   loadCategoryBreakdown();
   loadTopExpensiveSubscriptions();
   loadUpcomingRenewals();

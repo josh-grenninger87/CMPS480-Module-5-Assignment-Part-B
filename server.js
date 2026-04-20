@@ -15,7 +15,7 @@ app.use(express.static(__dirname));
 const db = mysql.createConnection({
   host: "db.it.pointpark.edu",
   user: "subscriptionprices",
-  password: "Enter Password Here",
+  password: "zgZRxOybiaepQIwL",
   database: "subscriptionprices",
   port: 3306
 });
@@ -235,14 +235,18 @@ app.get("/api/analytics/summary", (req, res) => {
       });
     }
 
-    const totalMonthlyCost = results.reduce((sum, sub) => sum + parseFloat(sub.cost || 0), 0);
+    const totalMonthlyCost = results.reduce(
+      (sum, sub) => sum + parseFloat(sub.cost || 0),
+      0
+    );
+
     const averageMonthlyCost = totalMonthlyCost / results.length;
 
     const highestSubscription = results.reduce((max, sub) => {
       return parseFloat(sub.cost || 0) > parseFloat(max.cost || 0) ? sub : max;
     }, results[0]);
 
-    const activeCount = results.filter(sub => {
+    const activeCount = results.filter((sub) => {
       const status = (sub.status || "").toLowerCase();
       return status === "active" || status === "";
     }).length;
@@ -331,6 +335,27 @@ app.get("/api/analytics/upcoming-renewals", (req, res) => {
     }
 
     res.json(results);
+  });
+});
+
+// =========================
+// Analytics Yearly Cost
+// Added from interview feedback
+// =========================
+app.get("/api/analytics/yearly-cost", (req, res) => {
+  const sql = `
+    SELECT ROUND(SUM(cost * 12), 2) AS yearly_total
+    FROM subscriptions
+    WHERE status = 'active' OR status IS NULL OR status = ''
+  `;
+
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error("Error fetching yearly cost:", err);
+      return res.status(500).json({ error: "Database error" });
+    }
+
+    res.json(results[0]);
   });
 });
 
