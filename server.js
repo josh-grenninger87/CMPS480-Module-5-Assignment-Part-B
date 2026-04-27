@@ -9,9 +9,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
 
-// =========================
-// MySQL Connection
-// =========================
 const db = mysql.createConnection({
   host: "db.it.pointpark.edu",
   user: "subscriptionprices",
@@ -28,16 +25,10 @@ db.connect((err) => {
   console.log("Connected to MySQL database");
 });
 
-// =========================
-// Root Route
-// =========================
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/index.html");
 });
 
-// =========================
-// Popular Services
-// =========================
 app.get("/api/subscriptions", (req, res) => {
   const sql = `
     SELECT 
@@ -60,9 +51,6 @@ app.get("/api/subscriptions", (req, res) => {
   });
 });
 
-// =========================
-// One Popular Service by ID
-// =========================
 app.get("/api/subscriptions/:id", (req, res) => {
   const { id } = req.params;
 
@@ -91,9 +79,6 @@ app.get("/api/subscriptions/:id", (req, res) => {
   });
 });
 
-// =========================
-// News / Recent Updates
-// =========================
 app.get("/api/news-updates", (req, res) => {
   const sql = `
     SELECT
@@ -117,9 +102,6 @@ app.get("/api/news-updates", (req, res) => {
   });
 });
 
-// =========================
-// Other Plans
-// =========================
 app.get("/api/plans", (req, res) => {
   const sql = `
     SELECT
@@ -140,11 +122,10 @@ app.get("/api/plans", (req, res) => {
   });
 });
 
-// =========================
-// Saved Subscriptions
-// =========================
 app.get("/api/saved-subscriptions", (req, res) => {
-  const sql = `
+  const { email } = req.query;
+
+  let sql = `
     SELECT
       id,
       name,
@@ -153,12 +134,21 @@ app.get("/api/saved-subscriptions", (req, res) => {
       renewal_date,
       notes,
       status,
-      created_at
+      created_at,
+      user_email
     FROM subscriptions
-    ORDER BY renewal_date ASC
   `;
 
-  db.query(sql, (err, results) => {
+  const params = [];
+
+  if (email) {
+    sql += ` WHERE user_email = ?`;
+    params.push(email);
+  }
+
+  sql += ` ORDER BY renewal_date ASC`;
+
+  db.query(sql, params, (err, results) => {
     if (err) {
       console.error("Error fetching saved subscriptions:", err);
       return res.status(500).json({ error: "Database error" });
@@ -168,9 +158,6 @@ app.get("/api/saved-subscriptions", (req, res) => {
   });
 });
 
-// =========================
-// Mock Price History for Detail Page
-// =========================
 app.get("/api/subscriptions/:id/prices", (req, res) => {
   const { id } = req.params;
 
@@ -205,22 +192,29 @@ app.get("/api/subscriptions/:id/prices", (req, res) => {
   });
 });
 
-// =========================
-// Analytics Summary
-// =========================
 app.get("/api/analytics/summary", (req, res) => {
-  const sql = `
+  const { email } = req.query;
+
+  let sql = `
     SELECT
       id,
       name,
       category,
       cost,
       renewal_date,
-      status
+      status,
+      user_email
     FROM subscriptions
   `;
 
-  db.query(sql, (err, results) => {
+  const params = [];
+
+  if (email) {
+    sql += ` WHERE user_email = ?`;
+    params.push(email);
+  }
+
+  db.query(sql, params, (err, results) => {
     if (err) {
       console.error("Error fetching analytics summary:", err);
       return res.status(500).json({ error: "Database error" });
@@ -263,21 +257,30 @@ app.get("/api/analytics/summary", (req, res) => {
   });
 });
 
-// =========================
-// Analytics Category Breakdown
-// =========================
 app.get("/api/analytics/category-breakdown", (req, res) => {
-  const sql = `
+  const { email } = req.query;
+
+  let sql = `
     SELECT
       COALESCE(category, 'Uncategorized') AS category,
       ROUND(SUM(cost), 2) AS total_cost,
       COUNT(*) AS subscription_count
     FROM subscriptions
+  `;
+
+  const params = [];
+
+  if (email) {
+    sql += ` WHERE user_email = ?`;
+    params.push(email);
+  }
+
+  sql += `
     GROUP BY category
     ORDER BY total_cost DESC
   `;
 
-  db.query(sql, (err, results) => {
+  db.query(sql, params, (err, results) => {
     if (err) {
       console.error("Error fetching category breakdown:", err);
       return res.status(500).json({ error: "Database error" });
@@ -287,22 +290,32 @@ app.get("/api/analytics/category-breakdown", (req, res) => {
   });
 });
 
-// =========================
-// Analytics Top Expensive
-// =========================
 app.get("/api/analytics/top-expensive", (req, res) => {
-  const sql = `
+  const { email } = req.query;
+
+  let sql = `
     SELECT
       name,
       category,
       cost,
-      renewal_date
+      renewal_date,
+      user_email
     FROM subscriptions
+  `;
+
+  const params = [];
+
+  if (email) {
+    sql += ` WHERE user_email = ?`;
+    params.push(email);
+  }
+
+  sql += `
     ORDER BY cost DESC
     LIMIT 5
   `;
 
-  db.query(sql, (err, results) => {
+  db.query(sql, params, (err, results) => {
     if (err) {
       console.error("Error fetching top expensive subscriptions:", err);
       return res.status(500).json({ error: "Database error" });
@@ -312,23 +325,33 @@ app.get("/api/analytics/top-expensive", (req, res) => {
   });
 });
 
-// =========================
-// Analytics Upcoming Renewals
-// =========================
 app.get("/api/analytics/upcoming-renewals", (req, res) => {
-  const sql = `
+  const { email } = req.query;
+
+  let sql = `
     SELECT
       name,
       category,
       cost,
-      renewal_date
+      renewal_date,
+      user_email
     FROM subscriptions
     WHERE renewal_date IS NOT NULL
+  `;
+
+  const params = [];
+
+  if (email) {
+    sql += ` AND user_email = ?`;
+    params.push(email);
+  }
+
+  sql += `
     ORDER BY renewal_date ASC
     LIMIT 5
   `;
 
-  db.query(sql, (err, results) => {
+  db.query(sql, params, (err, results) => {
     if (err) {
       console.error("Error fetching upcoming renewals:", err);
       return res.status(500).json({ error: "Database error" });
@@ -338,30 +361,34 @@ app.get("/api/analytics/upcoming-renewals", (req, res) => {
   });
 });
 
-// =========================
-// Analytics Yearly Cost
-// Added from interview feedback
-// =========================
 app.get("/api/analytics/yearly-cost", (req, res) => {
-  const sql = `
+  const { email } = req.query;
+
+  let sql = `
     SELECT ROUND(SUM(cost * 12), 2) AS yearly_total
     FROM subscriptions
-    WHERE status = 'active' OR status IS NULL OR status = ''
+    WHERE (status = 'active' OR status IS NULL OR status = '')
   `;
 
-  db.query(sql, (err, results) => {
+  const params = [];
+
+  if (email) {
+    sql += ` AND user_email = ?`;
+    params.push(email);
+  }
+
+  db.query(sql, params, (err, results) => {
     if (err) {
       console.error("Error fetching yearly cost:", err);
       return res.status(500).json({ error: "Database error" });
     }
 
-    res.json(results[0]);
+    res.json({
+      yearly_total: results[0].yearly_total || 0
+    });
   });
 });
 
-// =========================
-// Start Server
-// =========================
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

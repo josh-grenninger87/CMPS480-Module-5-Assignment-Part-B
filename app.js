@@ -2,6 +2,45 @@
 let categoryChartInstance = null;
 
 // =========================
+// Current User Helper
+// =========================
+function getSignedInUser() {
+  return localStorage.getItem("subtrackerUser");
+}
+
+function getUserQueryString() {
+  const user = getSignedInUser();
+  return user ? `?email=${encodeURIComponent(user)}` : "";
+}
+
+// =========================
+// User Sign In Display / Logout
+// =========================
+function updateUserDisplay() {
+  const user = getSignedInUser();
+  const loginSection = document.querySelector(".login-section");
+  if (!loginSection) return;
+
+  if (user) {
+    loginSection.removeAttribute("href");
+
+    loginSection.innerHTML = `
+      <div class="login-text">
+        ${user}<br />
+        <small>Sign out</small>
+      </div>
+      <div class="login-button">👤</div>
+    `;
+
+    loginSection.addEventListener("click", (e) => {
+      e.preventDefault();
+      localStorage.removeItem("subtrackerUser");
+      window.location.href = "index.html";
+    });
+  }
+}
+
+// =========================
 // Load Popular Subscriptions
 // =========================
 async function loadSubscriptions() {
@@ -143,7 +182,7 @@ async function loadOtherPlans() {
 // =========================
 async function loadSavedSubscriptions() {
   try {
-    const res = await fetch("/api/saved-subscriptions");
+    const res = await fetch(`/api/saved-subscriptions${getUserQueryString()}`);
 
     if (!res.ok) {
       throw new Error("Failed to fetch saved subscriptions");
@@ -164,6 +203,18 @@ function renderSavedSubscriptions(data) {
   if (!container) return;
 
   container.innerHTML = "";
+
+  if (!data.length) {
+    container.innerHTML = `
+      <div class="saved-subscription-item">
+        <div class="saved-subscription-left">
+          <h3>No saved subscriptions</h3>
+          <p>Sign in with a user that has subscriptions assigned.</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
 
   data.forEach(sub => {
     const item = document.createElement("div");
@@ -193,7 +244,7 @@ function renderSavedSubscriptions(data) {
 // =========================
 async function loadAnalyticsSummary() {
   try {
-    const res = await fetch("/api/analytics/summary");
+    const res = await fetch(`/api/analytics/summary${getUserQueryString()}`);
 
     if (!res.ok) {
       throw new Error("Failed to fetch analytics summary");
@@ -221,11 +272,10 @@ async function loadAnalyticsSummary() {
 
 // =========================
 // Analytics Yearly Cost
-// Added from interview feedback
 // =========================
 async function loadYearlyCost() {
   try {
-    const res = await fetch("/api/analytics/yearly-cost");
+    const res = await fetch(`/api/analytics/yearly-cost${getUserQueryString()}`);
 
     if (!res.ok) {
       throw new Error("Failed to fetch yearly cost");
@@ -246,7 +296,7 @@ async function loadYearlyCost() {
 // =========================
 async function loadCategoryBreakdown() {
   try {
-    const res = await fetch("/api/analytics/category-breakdown");
+    const res = await fetch(`/api/analytics/category-breakdown${getUserQueryString()}`);
 
     if (!res.ok) {
       throw new Error("Failed to fetch category breakdown");
@@ -303,7 +353,7 @@ function renderCategoryChart(data) {
 // =========================
 async function loadTopExpensiveSubscriptions() {
   try {
-    const res = await fetch("/api/analytics/top-expensive");
+    const res = await fetch(`/api/analytics/top-expensive${getUserQueryString()}`);
 
     if (!res.ok) {
       throw new Error("Failed to fetch top expensive subscriptions");
@@ -314,6 +364,11 @@ async function loadTopExpensiveSubscriptions() {
     if (!list) return;
 
     list.innerHTML = "";
+
+    if (!data.length) {
+      list.innerHTML = "<li>No subscription data available.</li>";
+      return;
+    }
 
     data.forEach(item => {
       const li = document.createElement("li");
@@ -334,7 +389,7 @@ async function loadTopExpensiveSubscriptions() {
 // =========================
 async function loadUpcomingRenewals() {
   try {
-    const res = await fetch("/api/analytics/upcoming-renewals");
+    const res = await fetch(`/api/analytics/upcoming-renewals${getUserQueryString()}`);
 
     if (!res.ok) {
       throw new Error("Failed to fetch upcoming renewals");
@@ -345,6 +400,11 @@ async function loadUpcomingRenewals() {
     if (!list) return;
 
     list.innerHTML = "";
+
+    if (!data.length) {
+      list.innerHTML = "<li>No upcoming renewals available.</li>";
+      return;
+    }
 
     data.forEach(item => {
       const renewalText = item.renewal_date
@@ -368,6 +428,7 @@ async function loadUpcomingRenewals() {
 // Initialize Everything
 // =========================
 document.addEventListener("DOMContentLoaded", () => {
+  updateUserDisplay();
   loadSubscriptions();
   loadSavedSubscriptions();
   loadNews();

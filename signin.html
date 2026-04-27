@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In - SubTracker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="logo-section">
+        <div class="logo-icon">📊</div>
+        <span>SubTracker</span>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <section class="signin-section">
+        <div class="signin-card">
+          <h1>Sign In</h1>
+          <p class="signin-subtitle">
+            Sign in to save your subscriptions, track renewal dates, and view your spending analytics across devices.
+          </p>
+
+          <form id="signin-form">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="Enter your email" required />
+
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter your password" required />
+
+            <button type="submit" class="signin-btn">Sign In</button>
+          </form>
+
+          <p id="signin-message"></p>
+
+          <div class="back-link-wrapper">
+            <a href="index.html" class="back-link">← Back to Dashboard</a>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="signin.js"></script>
+</body>
+</html>
