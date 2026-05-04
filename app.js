@@ -14,7 +14,7 @@ function getUserQueryString() {
 }
 
 // =========================
-// User Sign In Display / Logout
+// User Sign In Display / Sign Out Link
 // =========================
 function updateUserDisplay() {
   const user = getSignedInUser();
@@ -27,16 +27,19 @@ function updateUserDisplay() {
     loginSection.innerHTML = `
       <div class="login-text">
         ${user}<br />
-        <small>Sign out</small>
+        <small id="logout-link">Sign out</small>
       </div>
       <div class="login-button">👤</div>
     `;
 
-    loginSection.addEventListener("click", (e) => {
-      e.preventDefault();
-      localStorage.removeItem("subtrackerUser");
-      window.location.href = "index.html";
-    });
+    const logoutLink = document.getElementById("logout-link");
+    if (logoutLink) {
+      logoutLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        window.location.href = "signout.html";
+      });
+    }
   }
 }
 
